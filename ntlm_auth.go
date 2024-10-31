@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/smtp"
+
+	ntlm "github.com/bigkraig/go-ntlm/ntlm"
 )
 
 // loginAuth is an smtp.Auth that implements the LOGIN authentication mechanism.
@@ -39,8 +41,19 @@ func (a *ntlmAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 	}
 
 	switch {
-	case bytes.Equal(fromServer, []byte("Username:")):
-		return []byte(a.username), nil
+	case bytes.Equal(fromServer, []byte("NTLM supported")):
+		session, err := ntlm.CreateClientSession(ntlm.Version2, ntlm.ConnectionlessMode)
+		if err != nil {
+			return []byte{}, errors.New("error create ntlm session")
+		}
+		session.SetUserInfo(a.username, a.password, a.host)
+		negotiate, err := session.GenerateNegotiateMessage()
+		if err != nil {
+			return []byte{}, errors.New("error generate negotiate message ntlm")
+		}
+
+		negotiateString := negotiate.String()
+		return []byte(negotiateString), nil
 	case bytes.Equal(fromServer, []byte("Password:")):
 		return []byte(a.password), nil
 	default:
