@@ -47,7 +47,7 @@ func (a *ntlmAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 
 		return negotiate, nil
 	default:
-		challengeMsg, err := ntlm.ProcessChallenge(fromServer, a.username, a.password, true)
+		challengeMsg, err := ntlm.ProcessChallenge(fromServer, a.username, a.password, false)
 		if err != nil {
 			return []byte{}, errors.New("error process challenge message ntlm")
 		}
