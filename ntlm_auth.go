@@ -51,8 +51,7 @@ func (a *ntlmAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 			return []byte{}, errors.New("error generate negotiate message ntlm")
 		}
 
-		negotiateString := negotiate.String()
-		return []byte(negotiateString), nil
+		return negotiate.Bytes, nil
 	default:
 		session, err := ntlm.CreateClientSession(ntlm.Version1, ntlm.ConnectionlessMode)
 		if err != nil {
