@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/smtp"
 	"strings"
 	"time"
 )
@@ -22,7 +21,7 @@ type Dialer struct {
 	Password string
 	// Auth represents the authentication mechanism used to authenticate to the
 	// SMTP server.
-	Auth smtp.Auth
+	Auth Auth
 	// SSL defines whether an SSL connection is used. It should be false in
 	// most cases since the authentication mechanism should use the STARTTLS
 	// extension instead.
@@ -122,7 +121,7 @@ func (d *Dialer) Dial() (SendCloser, error) {
 	if d.Auth == nil && d.Username != "" {
 		if ok, auths := c.Extension("AUTH"); ok {
 			if strings.Contains(auths, "CRAM-MD5") {
-				d.Auth = smtp.CRAMMD5Auth(d.Username, d.Password)
+				d.Auth = CRAMMD5Auth(d.Username, d.Password)
 			} else if strings.Contains(auths, "LOGIN") &&
 				!strings.Contains(auths, "PLAIN") {
 				d.Auth = &loginAuth{
@@ -130,8 +129,14 @@ func (d *Dialer) Dial() (SendCloser, error) {
 					password: d.Password,
 					host:     d.Host,
 				}
+			} else if strings.Contains(auths, "NTLM") {
+				d.Auth = &ntlmAuth{
+					username: d.Username,
+					password: d.Password,
+					host:     d.Host,
+				}
 			} else {
-				d.Auth = smtp.PlainAuth("", d.Username, d.Password, d.Host)
+				d.Auth = PlainAuth("", d.Username, d.Password, d.Host)
 			}
 		}
 	}
@@ -275,7 +280,7 @@ func (c *smtpSender) Close() error {
 var (
 	tlsClient     = tls.Client
 	smtpNewClient = func(conn net.Conn, host string) (smtpClient, error) {
-		return smtp.NewClient(conn, host)
+		return NewClient(conn, host)
 	}
 )
 
@@ -283,7 +288,7 @@ type smtpClient interface {
 	Hello(string) error
 	Extension(string) (bool, string)
 	StartTLS(*tls.Config) error
-	Auth(smtp.Auth) error
+	Auth(Auth) error
 	Mail(string) error
 	Rcpt(string) error
 	Data() (io.WriteCloser, error)
