@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"net/smtp"
 
 	ntlm "github.com/bigkraig/go-ntlm/ntlm"
 )
@@ -16,7 +15,7 @@ type ntlmAuth struct {
 	host     string
 }
 
-func (a *ntlmAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+func (a *ntlmAuth) Start(server *ServerInfo) (string, []byte, error) {
 	if !server.TLS {
 		advertised := false
 		for _, mechanism := range server.Auth {
