@@ -3,7 +3,7 @@ package mail
 import (
 	"bytes"
 	"errors"
-	"fmt"
+	"log"
 
 	ntlm "github.com/bigkraig/go-ntlm/ntlm"
 )
@@ -51,11 +51,27 @@ func (a *ntlmAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 			return []byte{}, errors.New("error generate negotiate message ntlm")
 		}
 
-		negotiateString := negotiate.String()
-		return []byte(negotiateString), nil
-	case bytes.Equal(fromServer, []byte("Password:")):
-		return []byte(a.password), nil
+		return negotiate.Bytes, nil
 	default:
-		return nil, fmt.Errorf("gomail: unexpected server challenge: %s", fromServer)
+		session, err := ntlm.CreateClientSession(ntlm.Version2, ntlm.ConnectionlessMode)
+		if err != nil {
+			return []byte{}, errors.New("error create ntlm session")
+		}
+		session.SetUserInfo(a.username, a.password, a.host)
+
+		challengeMessage, err := ntlm.ParseChallengeMessage(fromServer)
+		if err != nil {
+			return []byte{}, errors.New("error parse challenge message ntlm")
+		}
+		err = session.ProcessChallengeMessage(challengeMessage)
+		if err != nil {
+			return []byte{}, errors.New("error process challenge message ntlm")
+		}
+		authenticationMsssage, err := session.GenerateAuthenticateMessage()
+		if err != nil {
+			return []byte{}, errors.New("error generate authentication message ntlm")
+		}
+		log.Println(authenticationMsssage.String())
+		return authenticationMsssage.Bytes(), nil
 	}
 }
