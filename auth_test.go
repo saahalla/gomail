@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"net/smtp"
 	"testing"
 )
 
@@ -59,7 +60,7 @@ func testLoginAuth(t *testing.T, test *authTest) {
 		password: testPwd,
 		host:     testHost,
 	}
-	server := &ServerInfo{
+	server := &smtp.ServerInfo{
 		Name: testHost,
 		TLS:  test.tls,
 		Auth: test.auths,
