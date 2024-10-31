@@ -41,7 +41,7 @@ func (a *ntlmAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 
 	switch {
 	case bytes.Equal(fromServer, []byte("NTLM supported")):
-		session, err := ntlm.CreateClientSession(ntlm.Version1, ntlm.ConnectionlessMode)
+		session, err := ntlm.CreateClientSession(ntlm.Version2, ntlm.ConnectionlessMode)
 		if err != nil {
 			return []byte{}, errors.New("error create ntlm session")
 		}
@@ -53,7 +53,7 @@ func (a *ntlmAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 
 		return negotiate.Bytes, nil
 	default:
-		session, err := ntlm.CreateClientSession(ntlm.Version1, ntlm.ConnectionlessMode)
+		session, err := ntlm.CreateClientSession(ntlm.Version2, ntlm.ConnectionlessMode)
 		if err != nil {
 			return []byte{}, errors.New("error create ntlm session")
 		}
