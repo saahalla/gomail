@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"io"
 	"net"
+	"net/smtp"
 	"reflect"
 	"testing"
 	"time"
@@ -19,7 +20,7 @@ var (
 	testConn    = &net.TCPConn{}
 	testTLSConn = tls.Client(testConn, &tls.Config{InsecureSkipVerify: true})
 	testConfig  = &tls.Config{InsecureSkipVerify: true}
-	testAuth    = PlainAuth("", testUser, testPwd, testHost)
+	testAuth    = smtp.PlainAuth("", testUser, testPwd, testHost)
 )
 
 func TestDialer(t *testing.T) {
@@ -300,7 +301,7 @@ func (c *mockClient) StartTLS(config *tls.Config) error {
 	return nil
 }
 
-func (c *mockClient) Auth(a Auth) error {
+func (c *mockClient) Auth(a smtp.Auth) error {
 	if !reflect.DeepEqual(a, testAuth) {
 		c.t.Errorf("Invalid auth, got %#v, want %#v", a, testAuth)
 	}
@@ -432,7 +433,7 @@ func doTestSendMail(t *testing.T, d *Dialer, testClient *mockClient, want []stri
 		return testTLSConn
 	}
 
-	smtpNewClient = func(conn net.Conn, host string) (smtpClient, error) {
+	smtpNewClient = func(conn net.Conn, host string, authNTLM bool) (smtpClient, error) {
 		if host != testHost {
 			t.Errorf("Invalid host, got %q, want %q", host, testHost)
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net/smtp"
 )
 
 // loginAuth is an smtp.Auth that implements the LOGIN authentication mechanism.
@@ -13,7 +14,7 @@ type loginAuth struct {
 	host     string
 }
 
-func (a *loginAuth) Start(server *ServerInfo) (string, []byte, error) {
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
 	if !server.TLS {
 		advertised := false
 		for _, mechanism := range server.Auth {
