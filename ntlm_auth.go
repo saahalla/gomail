@@ -3,9 +3,8 @@ package mail
 import (
 	"bytes"
 	"errors"
-	"log"
 
-	ntlm "github.com/bigkraig/go-ntlm/ntlm"
+	ntlm "github.com/Azure/go-ntlmssp"
 )
 
 // loginAuth is an smtp.Auth that implements the LOGIN authentication mechanism.
@@ -41,37 +40,18 @@ func (a *ntlmAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 
 	switch {
 	case bytes.Equal(fromServer, []byte("NTLM supported")):
-		session, err := ntlm.CreateClientSession(ntlm.Version2, ntlm.ConnectionlessMode)
-		if err != nil {
-			return []byte{}, errors.New("error create ntlm session")
-		}
-		session.SetUserInfo(a.username, a.password, a.host)
-		negotiate, err := session.GenerateNegotiateMessage()
+		negotiate, err := ntlm.NewNegotiateMessage(a.host, "")
 		if err != nil {
 			return []byte{}, errors.New("error generate negotiate message ntlm")
 		}
 
-		return negotiate.Bytes, nil
+		return negotiate, nil
 	default:
-		session, err := ntlm.CreateClientSession(ntlm.Version2, ntlm.ConnectionlessMode)
-		if err != nil {
-			return []byte{}, errors.New("error create ntlm session")
-		}
-		session.SetUserInfo(a.username, a.password, a.host)
-
-		challengeMessage, err := ntlm.ParseChallengeMessage(fromServer)
-		if err != nil {
-			return []byte{}, errors.New("error parse challenge message ntlm")
-		}
-		err = session.ProcessChallengeMessage(challengeMessage)
+		challengeMsg, err := ntlm.ProcessChallenge(fromServer, a.username, a.password, false)
 		if err != nil {
 			return []byte{}, errors.New("error process challenge message ntlm")
 		}
-		authenticationMsssage, err := session.GenerateAuthenticateMessage()
-		if err != nil {
-			return []byte{}, errors.New("error generate authentication message ntlm")
-		}
-		log.Println(authenticationMsssage.String())
-		return authenticationMsssage.Bytes(), nil
+
+		return challengeMsg, nil
 	}
 }
