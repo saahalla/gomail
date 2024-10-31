@@ -8,6 +8,8 @@ require (
 )
 
 require (
+	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
 	github.com/ThomsonReutersEikon/go-ntlm v0.0.0-20181130171125-cf23bd1ecf18 // indirect
 	github.com/bigkraig/go-ntlm v0.0.0-20160204225210-8856fdbdc17d // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 )
